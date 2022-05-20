@@ -1,0 +1,110 @@
+body {
+	background: url("./back.png") no-repeat;
+	background-size: cover;
+	cursor:pointer;
+	height: 100vh;
+}
+
+body, html {
+	margin: 0;
+	padding: 0;
+}
+
+
+#game {
+	text-align:center;
+	margin: 0 auto;
+	width: 360px;
+}
+
+#joystick {
+	display:block;
+	width:100%;
+}
+
+#moveUp {
+	display:block;
+	position:absolute;
+	width:50px;
+	left:50%;
+	margin-left: -25px;
+}
+
+#moveDown {
+	display:block;
+	position:absolute;
+	width:50px;
+	left:50%;
+	margin-left: -25px;
+	margin-top: 80px; 
+}
+
+#moveLeft {
+	display:block;
+	position:absolute;
+	width:73px;
+	left:50%;
+	margin-left: -103px;
+	margin-top: 50px;
+}
+
+#moveRight {
+	display:block;
+	position:absolute;
+	width:73px;
+	left:50%;
+	margin-left: 30px;
+	margin-top: 50px;
+}
+
+#topbar {
+	width:100%;
+	background: #005f62;
+	color: #fff;
+	height: 30px;
+	overflow: hidden;
+}
+
+#score {
+	float:left;
+	font-size: 20px;
+	line-height: 30px;
+	padding-left:20px;
+}
+
+#score img {
+	padding-top:7px;
+}
+
+#start-block {
+	text-align:center;
+	width:360px;
+	height:454px;
+	background:#005f62;
+	overflow: hidden;
+}
+
+#start-block #play {
+	display:block;
+	margin-top: 175px;
+}
+
+#start-block #leaders {
+	position: absolute;
+	color: #fff;
+	width:360px;
+	text-align:center;
+}
+
+#start-block #leaders ul {
+	list-style: none;
+	margin:0;
+	padding:0;
+}
+
+#sound {
+	float: right;
+	line-height: 30px;
+	margin-right: 20px;
+	margin-top:10px;
+}
