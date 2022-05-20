@@ -180,7 +180,7 @@ window.onload = function () {
     var gameovertime = 1;               // How long we have been game over
     var gameoverdelay = 0.5;            // Waiting time after game over
     var intervalCarpet = 0;                 // Spawn interval carpet
-    var intervalTimeCarpet = 5000;      // Spawn interval carpet
+    var intervalTimeCarpet = 10000;      // Spawn interval carpet
                                         // Direction of Carpet
     var axCarpet = 0;
     var ayCarpet = 0;
