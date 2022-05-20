@@ -407,7 +407,7 @@ window.onload = function () {
                                     level.tiles[axCarpet][ayCarpet] = 0;
                                 }
                                 intervalCarpet = 0
-                            }, 5000)
+                            }, intervalTimeCarpet)
                         }
 
                         document.getElementById("score-value").innerHTML = score;
