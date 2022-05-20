@@ -1,3 +1,7 @@
+*{
+	-webkit-tap-highlight-color: transparent;
+
+}
 body {
 	background: url("./back.png") no-repeat;
 	background-size: cover;

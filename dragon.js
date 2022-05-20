@@ -179,7 +179,7 @@ window.onload = function () {
     var gameover = true;                // Game is over
     var gameovertime = 1;               // How long we have been game over
     var gameoverdelay = 0.5;            // Waiting time after game over
-    var intervalCarpet;                 // Spawn interval carpet
+    var intervalCarpet = 0;                 // Spawn interval carpet
     var intervalTimeCarpet = 5000;      // Spawn interval carpet
                                         // Direction of Carpet
     var axCarpet = 0;
@@ -223,60 +223,6 @@ window.onload = function () {
         addItem();
         addItem();
 
-        // Spawn interval carpet
-        intervalCarpet = setInterval(() => {
-
-            if (level.tiles[axCarpet][ayCarpet] === 4) {
-                level.tiles[axCarpet][ayCarpet] = 0;
-            //     // Clear space
-            //
-            //     var tilex = axCarpet * level.tilewidth;
-            //     var tiley = ayCarpet * level.tileheight;
-            //
-            //     // Draw tiles based on their type
-            //     // Empty space
-            //     context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
-            //
-            //     var tilew = 64;
-            //     var tileh = 64;
-            //
-            //     context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-            }
-            // Loop until we have a valid item
-            var valid = false;
-
-            while (!valid) {
-                // Get a random position
-                var ax = randRange(0, level.columns - 1);
-                var ay = randRange(0, level.rows - 1);
-
-                // Make sure the snake doesn't overlap the new item
-                var overlap = false;
-                for (var i = 0; i < snake.segments.length; i++) {
-                    // Get the position of the current dragon segment
-                    var sx = snake.segments[i].x;
-                    var sy = snake.segments[i].y;
-
-                    // Check overlap
-                    if (ax === sx && ay === sy) {
-                        overlap = true;
-                        break;
-                    }
-                }
-
-                // Tile must be empty
-                if (!overlap && level.tiles[ax][ay] === 0) {
-                    // Add an item at the tile position
-                    // Check item type
-                    level.tiles[ax][ay] = 4;
-                    axCarpet = ax;
-                    ayCarpet = ay;
-                    valid = true;
-                }
-            }
-
-        }, intervalTimeCarpet);
-
         // Initialize the score
         score = 0;
         document.getElementById("score-value").innerHTML = score;
@@ -318,9 +264,6 @@ window.onload = function () {
                 }
                 if ((d >= 90) && (d < 99)) {
                     level.tiles[ax][ay] = 3;
-                }
-                if ((d >= 99) && (d <= 100)) {
-                    level.tiles[ax][ay] = 4;
                 }
 
                 valid = true;
@@ -367,7 +310,7 @@ window.onload = function () {
         }
     }
 
-    function updateGame(dt) {
+    async function updateGame(dt) {
         // Move the snake
         if (snake.tryMove(dt)) {
             // Check snake collisions
@@ -407,7 +350,8 @@ window.onload = function () {
                     });
 
                     if (intervalCarpet) {
-                        clearInterval(intervalCarpet);
+                        clearTimeout(intervalCarpet);
+                        intervalCarpet = 0;
                     }
                 }
 
@@ -444,14 +388,28 @@ window.onload = function () {
                     snake.move();
 
                     // Check collision with an apple
-                    if ((level.tiles[nx][ny] == 2) || (level.tiles[nx][ny] == 3)) {
-
+                    if ((level.tiles[nx][ny] === 2) || (level.tiles[nx][ny] === 3)) {
+                        // Spawn interval carpet
                         // Add a point to the score
-                        if (level.tiles[nx][ny] == 2) {
+                        if (level.tiles[nx][ny] === 2) {
+
                             score = score + 1;
-                        } else if (level.tiles[nx][ny] == 3) {
+                        } else if (level.tiles[nx][ny] === 3) {
+
                             score = score + 5;
                         }
+                        console.log('interval carpet:', intervalCarpet);
+                        if (!intervalCarpet) {
+                            spawnCarpet()
+
+                            intervalCarpet = setTimeout(() => {
+                                if (level.tiles[axCarpet][ayCarpet] === 4) {
+                                    level.tiles[axCarpet][ayCarpet] = 0;
+                                }
+                                intervalCarpet = 0
+                            }, 5000)
+                        }
+
                         document.getElementById("score-value").innerHTML = score;
                         // Remove the item
                         //audio.play();
@@ -492,6 +450,43 @@ window.onload = function () {
         // Increase time and framecount
         fpstime += dt;
         framecount++;
+    }
+
+    // Spawn carpet
+    function spawnCarpet() {
+        // Loop until we have a valid item
+        var valid = false;
+
+        while (!valid) {
+            // Get a random position
+            var ax = randRange(0, level.columns - 1);
+            var ay = randRange(0, level.rows - 1);
+
+            // Make sure the snake doesn't overlap the new item
+            var overlap = false;
+            for (var i = 0; i < snake.segments.length; i++) {
+                // Get the position of the current dragon segment
+                var sx = snake.segments[i].x;
+                var sy = snake.segments[i].y;
+
+                // Check overlap
+                if (ax === sx && ay === sy) {
+                    overlap = true;
+                    break;
+                }
+            }
+
+            // Tile must be empty
+            if (!overlap && level.tiles[ax][ay] === 0) {
+                // Add an item at the tile position
+                // Check item type
+                level.tiles[ax][ay] = 4;
+                axCarpet = ax;
+                ayCarpet = ay;
+                valid = true;
+            }
+        }
+
     }
 
     // Render the game
