@@ -1,6 +1,8 @@
 window.onload = function () {
     var canvas = document.getElementById("viewport");
+    var canvas2 = document.getElementById("viewport2");
     var context = canvas.getContext("2d");
+    var context2 = canvas2.getContext("2d");
     var user_id = document.getElementById("user").innerText;
     var chat_id = document.getElementById("chat").innerText;
     var message_id = document.getElementById("message_id").innerText;
@@ -11,7 +13,8 @@ window.onload = function () {
     var framecount = 0;
     var fps = 0;
 
-    var initialized = false;
+    var initialized = true;
+    // var initialized = false;
 
     // Images
     var images = [];
@@ -71,9 +74,39 @@ window.onload = function () {
             }
         }
     };
+    var GameField = function (columns, rows, tilewidth, tileheight) {
+        this.columns = columns;
+        this.rows = rows;
+        this.tilewidth = tilewidth;
+        this.tileheight = tileheight;
+
+        // Initialize tiles array
+        this.tiles = [];
+        for (var i = 0; i < this.columns; i++) {
+            this.tiles[i] = [];
+            for (var j = 0; j < this.rows; j++) {
+                this.tiles[i][j] = 0;
+            }
+        }
+    };
 
     // Generate a default level with walls
     Level.prototype.generate = function () {
+        for (var i = 0; i < this.columns; i++) {
+            for (var j = 0; j < this.rows; j++) {
+                if (i == 0 || i == this.columns - 1 ||
+                    j == 0 || j == this.rows - 1) {
+                    // Add walls at the edges of the level
+                    this.tiles[i][j] = 0;
+
+                } else {
+                    // Add empty space
+                    this.tiles[i][j] = 0;
+                }
+            }
+        }
+    };
+    GameField.prototype.generate = function () {
         for (var i = 0; i < this.columns; i++) {
             for (var j = 0; j < this.rows; j++) {
                 if (i == 0 || i == this.columns - 1 ||
@@ -172,14 +205,15 @@ window.onload = function () {
 
     // Create objects
     var snake = new Snake();
-    var level = new Level(20, 25, 18, 18);
+    var level = new Level(20, 25, 12, 12);
+    var gameField = new GameField(30, 38, 12, 12);
 
     // Variables
     var score = 0;                      // Score
     var gameover = true;                // Game is over
     var gameovertime = 1;               // How long we have been game over
     var gameoverdelay = 0.5;            // Waiting time after game over
-    var intervalCarpet = 0;             // Spawn interval carpet
+    var intervalCarpet = 0;             // Spawn carpet timer
     var intervalTimeCarpet = 10000;     // Spawn interval carpet
                                         // Direction of Carpet
     var axCarpet = 0;
@@ -213,10 +247,11 @@ window.onload = function () {
 
     function newGame() {
         // Initialize the snake
-        snake.init(10, 10, 1, 6, 5);
+        snake.init(10, 10, 1, 10, 5);
 
         // Generate the default level
         level.generate();
+        gameField.generate();
 
         // Add an item
         addItem();
@@ -237,8 +272,8 @@ window.onload = function () {
         var valid = false;
         while (!valid) {
             // Get a random position
-            var ax = randRange(0, level.columns - 1);
-            var ay = randRange(0, level.rows - 1);
+            var ax = randRange(0, gameField.columns - 1);
+            var ay = randRange(0, gameField.rows - 1);
 
             // Make sure the snake doesn't overlap the new item
             var overlap = false;
@@ -255,15 +290,15 @@ window.onload = function () {
             }
 
             // Tile must be empty
-            if (!overlap && level.tiles[ax][ay] == 0) {
+            if (!overlap && gameField.tiles[ax][ay] == 0) {
                 // Add an item at the tile position
                 // Check item type
                 d = Math.ceil(Math.random() * 100);
                 if ((d >= 1) && (d < 90)) {
-                    level.tiles[ax][ay] = 2;
+                    gameField.tiles[ax][ay] = 2;
                 }
                 if ((d >= 90) && (d < 99)) {
-                    level.tiles[ax][ay] = 3;
+                    gameField.tiles[ax][ay] = 3;
                 }
 
                 valid = true;
@@ -274,8 +309,7 @@ window.onload = function () {
     // Main loop
     function main(tframe) {
         // Request animation frames
-        window.requestAnimationFrame(main);
-
+        requestAnimationFrame(main);
         if (!initialized) {
             // Preloader
 
@@ -314,14 +348,13 @@ window.onload = function () {
         // Move the snake
         if (snake.tryMove(dt)) {
             // Check snake collisions
-
             // Get the coordinates of the next move
             var nextmove = snake.nextMove();
             var nx = nextmove.x;
             var ny = nextmove.y;
 
-            if (nx >= 0 && nx < level.columns && ny >= 0 && ny < level.rows) {
-                if (level.tiles[nx][ny] === 1 || level.tiles[nx][ny] === 4) {
+            if (nx >= 0 && nx < gameField.columns && ny >= 0 && ny < gameField.rows) {
+                if (gameField.tiles[nx][ny] === 1 || gameField.tiles[nx][ny] === 4) {
                     // Collision with a wall
                     gameover = true;
                     $.ajax({
@@ -388,13 +421,13 @@ window.onload = function () {
                     snake.move();
 
                     // Check collision with an apple
-                    if ((level.tiles[nx][ny] === 2) || (level.tiles[nx][ny] === 3)) {
+                    if ((gameField.tiles[nx][ny] === 2) || (gameField.tiles[nx][ny] === 3)) {
                         // Spawn interval carpet
                         // Add a point to the score
-                        if (level.tiles[nx][ny] === 2) {
+                        if (gameField.tiles[nx][ny] === 2) {
 
                             score = score + 1;
-                        } else if (level.tiles[nx][ny] === 3) {
+                        } else if (gameField.tiles[nx][ny] === 3) {
 
                             score = score + 5;
                         }
@@ -403,8 +436,8 @@ window.onload = function () {
                             spawnCarpet()
 
                             intervalCarpet = setTimeout(() => {
-                                if (level.tiles[axCarpet][ayCarpet] === 4) {
-                                    level.tiles[axCarpet][ayCarpet] = 0;
+                                if (gameField.tiles[axCarpet][ayCarpet] === 4) {
+                                    gameField.tiles[axCarpet][ayCarpet] = 0;
                                 }
                                 intervalCarpet = 0
                             }, intervalTimeCarpet)
@@ -414,7 +447,7 @@ window.onload = function () {
                         // Remove the item
                         //audio.play();
                         $('#audio').trigger('play');
-                        level.tiles[nx][ny] = 0;
+                        gameField.tiles[nx][ny] = 0;
 
                         // Add a new item
                         addItem();
@@ -430,6 +463,7 @@ window.onload = function () {
                 // Out of bounds
                 gameover = true;
             }
+            z = 0
 
             if (gameover) {
                 gameovertime = 0;
@@ -459,8 +493,8 @@ window.onload = function () {
 
         while (!valid) {
             // Get a random position
-            var ax = randRange(0, level.columns - 1);
-            var ay = randRange(0, level.rows - 1);
+            var ax = randRange(0, gameField.columns - 1);
+            var ay = randRange(0, gameField.rows - 1);
 
             // Make sure the snake doesn't overlap the new item
             var overlap = false;
@@ -477,10 +511,10 @@ window.onload = function () {
             }
 
             // Tile must be empty
-            if (!overlap && level.tiles[ax][ay] === 0) {
+            if (!overlap && gameField.tiles[ax][ay] === 0) {
                 // Add an item at the tile position
                 // Check item type
-                level.tiles[ax][ay] = 4;
+                gameField.tiles[ax][ay] = 4;
                 axCarpet = ax;
                 ayCarpet = ay;
                 valid = true;
@@ -489,16 +523,15 @@ window.onload = function () {
 
     }
 
+    let z = 0;
+
     // Render the game
     function render() {
-        // Draw background
-        context.fillStyle = '#72ac46';
-        context.fillRect(0, 0, canvas.width, canvas.height);
-
-
+        drawBox();
         drawLevel();
-        drawSnake();
-
+        drawSnake(z);
+        if (z < 4) requestAnimationFrame(render);
+        z += 1.5
         // Game over
         if (gameover) {
             context.fillStyle = "rgba(0, 0, 0, 0.5)";
@@ -525,10 +558,70 @@ window.onload = function () {
         let sq = new Image();
         sq.src = "sq.png";
 
-        for (var i = 0; i < level.columns; i++) {
-            for (var j = 0; j < level.rows; j++) {
+        for (var i = 0; i < gameField.columns; i++) {
+            for (var j = 0; j < gameField.rows; j++) {
                 // Get the current tile and location
-                var tile = level.tiles[i][j];
+                var tile = gameField.tiles[i][j];
+                var tilex = i * gameField.tilewidth;
+                var tiley = j * gameField.tileheight;
+
+                // Draw tiles based on their type
+                if (tile === 1) {
+                    // Wall
+
+                    context.fillStyle = "#005f62";
+                    context.fillRect(tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                } else if (tile === 2) {
+                    // Ethereum
+
+                    // Draw apple background
+                    // context.fillStyle = context.createPattern(sq,'no-repeat');
+                    context.fillRect(tilex, tiley, gameField.tilewidth, gameField.tileheight);
+
+                    // Draw the ethereum image
+                    var tx = 0;
+                    var ty = 3;
+                    var tilew = 64;
+                    var tileh = 64;
+                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                } else if (tile === 3) {
+                    // Bitcoin
+                    // context.fillStyle = context.createPattern(sq,'no-repeat'); //colors[i];
+
+                    context.fillRect(tilex, tiley, gameField.tilewidth, gameField.tileheight);
+
+                    // Draw the bitcoin image
+                    var tx = 1;
+                    var ty = 3;
+                    var tilew = 64;
+                    var tileh = 64;
+                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                } else if (tile == 4) {
+                    // Carpet
+
+                    context.fillRect(tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                    // Draw the carpet image
+                    var tx = 2;
+                    var ty = 3;
+                    var tilew = 64;
+                    var tileh = 64;
+                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, gameField.tilewidth, gameField.tileheight);
+                }
+            }
+        }
+    }
+    function drawBox() {
+        //Square
+        let sq = new Image();
+        sq.src = "sq.png";
+
+        for (var i = 0; i < gameField.columns; i++) {
+            for (var j = 0; j < gameField.rows; j++) {
+                // Get the current tile and location
+                var tile = gameField.tiles[i][j];
                 var tilex = i * level.tilewidth;
                 var tiley = j * level.tileheight;
 
@@ -541,70 +634,27 @@ window.onload = function () {
                     var tileh = 64;
 
                     context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                } else if (tile == 1) {
-                    // Wall
-
-                    context.fillStyle = "#005f62";
-                    context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
-                } else if (tile == 2) {
-                    // Ethereum
-
-                    // Draw apple background
-                    // context.fillStyle = context.createPattern(sq,'no-repeat');
-                    context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
-
-                    // Draw the ethereum image
-                    var tx = 0;
-                    var ty = 3;
-                    var tilew = 64;
-                    var tileh = 64;
-                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                } else if (tile == 3) {
-                    // Bitcoin
-                    // context.fillStyle = context.createPattern(sq,'no-repeat'); //colors[i];
-
-                    context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
-
-                    // Draw the bitcoin image
-                    var tx = 1;
-                    var ty = 3;
-                    var tilew = 64;
-                    var tileh = 64;
-                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                } else if (tile == 4) {
-                    // Carpet
-
-                    context.fillRect(tilex, tiley, level.tilewidth, level.tileheight);
-                    // Draw the carpet image
-                    var tx = 2;
-                    var ty = 3;
-                    var tilew = 64;
-                    var tileh = 64;
-                    context.drawImage(sqimage, 0, 0, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
-                    context.drawImage(tileimage, tx * tilew, ty * tileh, tilew, tileh, tilex, tiley, level.tilewidth, level.tileheight);
                 }
             }
         }
     }
 
     // Draw the snake
-    function drawSnake() {
+    function drawSnake(z) {
         // Loop over every snake segment
-        for (var i = 0; i < snake.segments.length; i++) {
+        context2.clearRect(0, 0, canvas2.width, canvas2.height);
+        for (let i = 0; i < snake.segments.length; i++) {
             var segment = snake.segments[i];
             var segx = segment.x;
             var segy = segment.y;
-            var tilex = segx * level.tilewidth;
-            var tiley = segy * level.tileheight;
-
+            var tilex = segx * gameField.tilewidth;
+            var tiley = segy * gameField.tileheight;
             // Sprite column and row that gets calculated
             var tx = 0;
             var ty = 0;
-
-            if (i == 0) {
+            if (i === 0) {
                 // Head; Determine the correct image
+                //1
                 var nseg = snake.segments[i + 1]; // Next segment
                 if (segy < nseg.y) {
                     // Up
@@ -623,7 +673,7 @@ window.onload = function () {
                     tx = 3;
                     ty = 1;
                 }
-            } else if (i == snake.segments.length - 1) {
+            } else if (i === snake.segments.length - 1) {
                 // Tail; Determine the correct image
                 var pseg = snake.segments[i - 1]; // Prev segment
                 if (pseg.y < segy) {
@@ -651,6 +701,9 @@ window.onload = function () {
                     // Horizontal Left-Right
                     tx = 1;
                     ty = 0;
+                    if (nseg.x < segx && pseg.x > segx) {
+                    } else if (pseg.x < segx && nseg.x > segx) {
+                    }
                 } else if (pseg.x < segx && nseg.y > segy || nseg.x < segx && pseg.y > segy) {
                     // Angle Left-Down
                     tx = 2;
@@ -674,25 +727,25 @@ window.onload = function () {
                 }
             }
 
-            // Draw the image of the snake part
-            context.drawImage(tileimage, tx * 64, ty * 64, 64, 64, tilex, tiley,
-                level.tilewidth, level.tileheight);
+                context2.drawImage(tileimage, tx * 64, ty * 64, 64, 64, tilex, tiley,
+                    gameField.tilewidth, gameField.tileheight);
         }
     }
 
-    // Draw text that is centered
+
+// Draw text that is centered
     function drawCenterText(text, x, y, width) {
         var textdim = context.measureText(text);
         context.fillText(text, x + (width - textdim.width) / 2, y);
     }
 
-    // Get a random int between low and high, inclusive
+// Get a random int between low and high, inclusive
     function randRange(low, high) {
         return Math.floor(low + Math.random() * (high - low + 1));
     }
 
 
-    // Keyboard event handler
+// Keyboard event handler
     function onKeyDown(e) {
         if (e.keyCode == 37 || e.keyCode == 65) {
             // Left or A
@@ -717,7 +770,7 @@ window.onload = function () {
         }
     }
 
-    // Call init to start the game
+// Call init to start the game
     init();
 
     document.getElementById("moveDown").onclick = function () {
@@ -774,4 +827,4 @@ window.onload = function () {
         $('#sound-on').css("display", "block");
         document.getElementById("audio").muted = false;
     };
-};
+}
