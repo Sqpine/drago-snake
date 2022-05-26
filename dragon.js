@@ -13,8 +13,7 @@ window.onload = function () {
     var framecount = 0;
     var fps = 0;
 
-    var initialized = true;
-    // var initialized = false;
+    var initialized = false;
 
     // Images
     var images = [];
